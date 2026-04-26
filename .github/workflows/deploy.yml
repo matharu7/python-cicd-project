@@ -26,7 +26,7 @@ jobs:
             sudo docker stop flask-app || true
             sudo docker rm flask-app || true
             # Build and Run
-            cd /home/ec2-user/app || mkdir -p /home/ec2-user/app
+            cd /home/ubuntu/app || mkdir -p /home/ubuntu/app
             # (In a real scenario, you'd pull from DockerHub, but here we build locally for simplicity)
             sudo docker build -t flask-app .
             sudo docker run -d -p 80:5000 --name flask-app flask-app
