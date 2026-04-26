@@ -18,8 +18,8 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            sudo yum update -y
-            sudo yum install -y docker
+            sudo apt update -y
+            sudo apt install -y docker
             sudo systemctl start docker
             sudo systemctl enable docker
             # Stop existing container if it exists
