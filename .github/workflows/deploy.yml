@@ -9,24 +9,41 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Deploy to EC2
+      # This step copies your code from GitHub to the EC2 server
+      - name: Copy files to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "."
+          target: "/home/ubuntu/app"
+
+      # This step builds and runs the container on the server
+      - name: Deploy on EC2
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            sudo apt update -y
-            sudo apt install -y docker.io
-            sudo systemctl start docker
-            sudo systemctl enable docker
-            # Stop existing container if it exists
+            # Install Docker if not present (Ubuntu way)
+            if ! [ -x "$(command -v docker)" ]; then
+              sudo apt-get update
+              sudo apt-get install -y docker.io
+              sudo usermod -aG docker ubuntu
+            fi
+            
+            cd /home/ubuntu/app
+            
+            # Stop and remove old container if it exists
             sudo docker stop flask-app || true
             sudo docker rm flask-app || true
-            # Build and Run
-            cd /home/ubuntu/app || mkdir -p /home/ubuntu/app
-            # (In a real scenario, you'd pull from DockerHub, but here we build locally for simplicity)
+            
+            # Build the image from the local Dockerfile
             sudo docker build -t flask-app .
+            
+            # Run the new container
             sudo docker run -d -p 80:5000 --name flask-app flask-app
